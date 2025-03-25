@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testeur d'API TMDB</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        .test-section {
+            margin-bottom: 30px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #388E3C;
+        }
+        .log-container {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+            color: #333;
+        }
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .error {
+            color: #F44336;
+            font-weight: bold;
+        }
+        .warning {
+            color: #FF9800;
+            font-weight: bold;
+        }
+        .info {
+            color: #2196F3;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 15px;
+            border-radius: 4px;
+            display: block;
+        }
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .movie-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .movie-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .movie-card-title {
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            background: #f5f5f5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+    <h1>Testeur d'API TMDB</h1>
+    
+    <div class="card">
+        <h2>Configuration API</h2>
+        <div class="form-group">
+            <label for="api-key">Clé API TMDB:</label>
+            <input type="text" id="api-key" value="549f3c130164e3fbe7aec866b97b53e5" style="width: 300px;">
+        </div>
+        <div class="form-group">
+            <label for="api-language">Langue:</label>
+            <select id="api-language">
+                <option value="fr-FR" selected>Français</option>
+                <option value="en-US">Anglais</option>
+                <option value="es-ES">Espagnol</option>
+                <option value="de-DE">Allemand</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 1: Vérifier la connexion à TMDB</h2>
+        <button onclick="testAPIConnection()">Tester la connexion à l'API</button>
+        <div id="api-connection-log" class="log-container"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Rechercher des films</h2>
+        <div class="form-group">
+            <label for="search-query">Recherche:</label>
+            <input type="text" id="search-query" value="Avengers" style="width: 300px;">
+        </div>
+        <button onclick="searchMovies()">Rechercher des films</button>
+        <div id="search-log" class="log-container"></div>
+        <div id="search-results" class="movie-grid"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Films populaires</h2>
+        <button onclick="getPopularMovies()">Obtenir les films populaires</button>
+        <div id="popular-log" class="log-container"></div>
+        <div id="popular-results" class="movie-grid"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Détails d'un film</h2>
+        <div class="form-group">
+            <label for="movie-id">ID du film:</label>
+            <input type="number" id="movie-id" value="299534" style="width: 150px;">
+            <small>(ex: 299534 pour Avengers: Endgame)</small>
+        </div>
+        <button onclick="getMovieDetails()">Obtenir les détails du film</button>
+        <div id="details-log" class="log-container"></div>
+        <div id="movie-details" class="card" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 5: Test de génération d'URL d'image</h2>
+        <div class="form-group">
+            <label for="image-path">Chemin de l'image:</label>
+            <input type="text" id="image-path" value="/rr7E0NoGKxvbkb89eR1GwfoYjpA.jpg" style="width: 300px;">
+        </div>
+        <div class="form-group">
+            <label for="image-type">Type d'image:</label>
+            <select id="image-type">
+                <option value="poster" selected>Affiche (poster)</option>
+                <option value="backdrop">Arrière-plan (backdrop)</option>
+                <option value="profile">Profil (profile)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="image-size">Taille:</label>
+            <select id="image-size">
+                <option value="small">Petite</option>
+                <option value="medium" selected>Moyenne</option>
+                <option value="large">Grande</option>
+                <option value="original">Originale</option>
+            </select>
+        </div>
+        <button onclick="testImageUrl()">Tester l'URL d'image</button>
+        <div id="image-log" class="log-container"></div>
+        <img id="image-preview" class="image-preview" style="display: none;">
+    </div>
+
+    <script>
+        // Configuration de base
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
+        
+        // Tailles d'images disponibles
+        const IMAGE_SIZES = {
+            poster: {
+                small: 'w185',
+                medium: 'w342',
+                large: 'w500',
+                original: 'original'
+            },
+            backdrop: {
+                small: 'w300',
+                medium: 'w780',
+                large: 'w1280',
+                original: 'original'
+            },
+            profile: {
+                small: 'w45',
+                medium: 'w185',
+                large: 'h632',
+                original: 'original'
+            }
+        };
+
+        // Fonction pour ajouter des messages de log avec style
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const logEntry = document.createElement('div');
+            logEntry.classList.add(type);
+            logEntry.textContent = message;
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Fonction pour effacer les logs
+        function clearLog(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+        }
+
+        // Fonction pour construire l'URL de l'API
+        function buildApiUrl(endpoint, params = {}) {
+            const apiKey = document.getElementById('api-key').value;
+            const language = document.getElementById('api-language').value;
+            
+            const url = new URL(`${BASE_URL}${endpoint}`);
+            url.searchParams.append('api_key', apiKey);
+            url.searchParams.append('language', language);
+            
+            for (const key in params) {
+                url.searchParams.append(key, params[key]);
+            }
+            
+            return url.toString();
+        }
+
+        // Fonction pour construire l'URL d'une image
+        function getImageUrl(path, size = 'medium', type = 'poster') {
+            if (!path) return null;
+            return `${IMAGE_BASE_URL}/${IMAGE_SIZES[type][size]}${path}`;
+        }
+
+        // Test 1: Vérifier que l'API répond
+        async function testAPIConnection() {
+            const containerId = 'api-connection-log';
+            clearLog(containerId);
+            
+            log(containerId, `🌐 Test d'accès à l'API TMDB...`);
+            
+            try {
+                log(containerId, `📡 Tentative de connexion...`);
+                const startTime = Date.now();
+                const url = buildApiUrl('/configuration');
+                log(containerId, `🔗 URL: ${url}`);
+                
+                const response = await fetch(url);
+                const endTime = Date.now();
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(containerId, `✅ L'API répond correctement. Status: ${response.status}`, 'success');
+                    log(containerId, `⏱️ Temps de réponse: ${endTime - startTime}ms`);
+                    log(containerId, `📦 Configuration de l'API: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    const error = await response.json();
+                    log(containerId, `❌ Erreur API: ${error.status_message}`, 'error');
+                }
+            } catch (error) {
+                log(containerId, `❌ Impossible de se connecter à l'API: ${error}`, 'error');
+                log(containerId, `🔧 Vérifiez votre clé API et votre connexion internet.`, 'warning');
+            }
+        }
+
+        // Test 2: Rechercher des films
+        async function searchMovies() {
+            const containerId = 'search-log';
+            const resultsContainer = document.getElementById('search-results');
+            clearLog(containerId);
+            resultsContainer.innerHTML = '';
+            
+            const query = document.getElementById('search-query').value;
+            
+            if (!query) {
+                log(containerId, `⚠️ Veuillez entrer un terme de recherche`, 'warning');
+                return;
+            }
+            
+            log(containerId, `🔍 Recherche de films avec le terme: "${query}"`);
+            
+            try {
+                const url = buildApiUrl('/search/movie', { query });
+                log(containerId, `🔗 URL: ${url}`);
+                
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(containerId, `✅ Recherche réussie! ${data.total_results} résultats trouvés.`, 'success');
+                    
+                    if (data.results.length > 0) {
+                        data.results.slice(0, 12).forEach(movie => {
+                            const movieCard = document.createElement('div');
+                            movieCard.className = 'movie-card';
+                            
+                            const imgSrc = movie.poster_path 
+                                ? getImageUrl(movie.poster_path, 'small', 'poster')
+                                : 'https://via.placeholder.com/185x278?text=No+Image';
+                            
+                            movieCard.innerHTML = `
+                                <img src="${imgSrc}" alt="${movie.title}">
+                                <div class="movie-card-title">${movie.title}</div>
+                            `;
+                            
+                            resultsContainer.appendChild(movieCard);
+                        });
+                    } else {
+                        log(containerId, `ℹ️ Aucun film trouvé pour cette recherche.`);
+                    }
+                } else {
+                    const error = await response.json();
+                    log(containerId, `❌ Erreur API: ${error.status_message}`, 'error');
+                }
+            } catch (error) {
+                log(containerId, `❌ Erreur lors de la recherche: ${error}`, 'error');
+            }
+        }
+
+        // Test 3: Films populaires
+        async function getPopularMovies() {
+            const containerId = 'popular-log';
+            const resultsContainer = document.getElementById('popular-results');
+            clearLog(containerId);
+            resultsContainer.innerHTML = '';
+            
+            log(containerId, `🎬 Récupération des films populaires...`);
+            
+            try {
+                const url = buildApiUrl('/movie/popular');
+                log(containerId, `🔗 URL: ${url}`);
+                
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(containerId, `✅ ${data.results.length} films populaires récupérés.`, 'success');
+                    
+                    data.results.slice(0, 12).forEach(movie => {
+                        const movieCard = document.createElement('div');
+                        movieCard.className = 'movie-card';
+                        
+                        const imgSrc = movie.poster_path 
+                            ? getImageUrl(movie.poster_path, 'small', 'poster')
+                            : 'https://via.placeholder.com/185x278?text=No+Image';
+                        
+                        movieCard.innerHTML = `
+                            <img src="${imgSrc}" alt="${movie.title}">
+                            <div class="movie-card-title">${movie.title}</div>
+                        `;
+                        
+                        resultsContainer.appendChild(movieCard);
+                    });
+                } else {
+                    const error = await response.json();
+                    log(containerId, `❌ Erreur API: ${error.status_message}`, 'error');
+                }
+            } catch (error) {
+                log(containerId, `❌ Erreur lors de la récupération des films populaires: ${error}`, 'error');
+            }
+        }
+
+        // Test 4: Détails d'un film
+        async function getMovieDetails() {
+            const containerId = 'details-log';
+            const detailsContainer = document.getElementById('movie-details');
+            clearLog(containerId);
+            detailsContainer.innerHTML = '';
+            detailsContainer.style.display = 'none';
+            
+            const movieId = document.getElementById('movie-id').value;
+            
+            if (!movieId) {
+                log(containerId, `⚠️ Veuillez entrer un ID de film`, 'warning');
+                return;
+            }
+            
+            log(containerId, `🎬 Récupération des détails du film ID: ${movieId}`);
+            
+            try {
+                const url = buildApiUrl(`/movie/${movieId}`);
+                log(containerId, `🔗 URL: ${url}`);
+                
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const movie = await response.json();
+                    log(containerId, `✅ Détails récupérés pour: ${movie.title}`, 'success');
+                    
+                    const posterUrl = movie.poster_path 
+                        ? getImageUrl(movie.poster_path, 'medium', 'poster')
+                        : 'https://via.placeholder.com/342x513?text=No+Image';
+                    
+                    const backdropUrl = movie.backdrop_path 
+                        ? getImageUrl(movie.backdrop_path, 'medium', 'backdrop')
+                        : null;
+                    
+                    const backdropStyle = backdropUrl 
+                        ? `background-image: url(${backdropUrl}); background-size: cover; background-position: center; color: white; text-shadow: 1px 1px 2px black;` 
+                        : '';
+                    
+                    detailsContainer.innerHTML = `
+                        <div style="display: flex; flex-wrap: wrap; ${backdropStyle}">
+                            <div style="width: 200px; flex-shrink: 0; margin-right: 20px;">
+                                <img src="${posterUrl}" alt="${movie.title}" style="width: 100%; border-radius: 8px;">
+                            </div>
+                            <div style="flex: 1; min-width: 300px; padding: ${backdropUrl ? '15px' : '0'};">
+                                <h2>${movie.title} ${movie.release_date ? `(${movie.release_date.split('-')[0]})` : ''}</h2>
+                                <p><strong>Note:</strong> ${movie.vote_average} / 10</p>
+                                <p><strong>Genres:</strong> ${movie.genres.map(g => g.name).join(', ')}</p>
+                                <p><strong>Durée:</strong> ${movie.runtime} minutes</p>
+                                <p><strong>Synopsis:</strong> ${movie.overview || 'Non disponible'}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    detailsContainer.style.display = 'block';
+                } else {
+                    const error = await response.json();
+                    log(containerId, `❌ Erreur API: ${error.status_message}`, 'error');
+                }
+            } catch (error) {
+                log(containerId, `❌ Erreur lors de la récupération des détails: ${error}`, 'error');
+            }
+        }
+
+        // Test 5: Test de génération d'URL d'image
+        function testImageUrl() {
+            const containerId = 'image-log';
+            const imagePreview = document.getElementById('image-preview');
+            clearLog(containerId);
+            imagePreview.style.display = 'none';
+            
+            const imagePath = document.getElementById('image-path').value;
+            const imageType = document.getElementById('image-type').value;
+            const imageSize = document.getElementById('image-size').value;
+            
+            if (!imagePath) {
+                log(containerId, `⚠️ Veuillez entrer un chemin d'image`, 'warning');
+                return;
+            }
+            
+            log(containerId, `🖼️ Test de l'URL d'image pour: ${imagePath}`);
+            log(containerId, `📐 Type: ${imageType}, Taille: ${imageSize}`);
+            
+            try {
+                const url = getImageUrl(imagePath, imageSize, imageType);
+                log(containerId, `🔗 URL générée: ${url}`, 'success');
+                
+                // Afficher l'aperçu de l'image
+                imagePreview.src = url;
+                imagePreview.alt = "Aperçu de l'image";
+                imagePreview.style.display = 'block';
+                
+                // Vérifier que l'image se charge correctement
+                imagePreview.onload = () => {
+                    log(containerId, `✅ L'image a été chargée avec succès`, 'success');
+                };
+                
+                imagePreview.onerror = () => {
+                    log(containerId, `❌ Impossible de charger l'image. Vérifiez le chemin d'accès.`, 'error');
+                    imagePreview.style.display = 'none';
+                };
+            } catch (error) {
+                log(containerId, `❌ Erreur lors de la génération de l'URL: ${error}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
